@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash
+from flask import Flask, render_template, flash, request
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, EmailField
 from wtforms.validators import DataRequired
@@ -8,6 +8,7 @@ from datetime import datetime
 # Create a Flask Instance
 app = Flask(__name__)
 # Add Database
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 # Secret Key!
 app.config['SECRET_KEY'] = 'my secret key'
@@ -49,6 +50,30 @@ class NamerForm(FlaskForm):
 #title
 #trim
 #striptags
+
+#Update Database Record
+@app.route('/update/<int:id>', methods=['GET', 'POST'])
+def update(id):
+    form = UserForm()
+    name_to_update = User.query.get_or_404(id)
+    if request.method == 'POST':
+        name_to_update.name = request.form['name']
+        name_to_update.email = request.form['email']
+        try:
+            db.session.commit()
+            flash('User Updated Successfully!')
+            return render_template("update.html",
+                                   form = form,
+                                   name_to_update = name_to_update)
+        except Exception as e:
+            flash(f'Error! Look like there was a problem {e}')
+            return render_template("update.html",
+                                   form = form,
+                                   name_to_update = name_to_update)
+    else:
+        return render_template("update.html",
+                                form = form,
+                                name_to_update = name_to_update)
 
 @app.route('/user/add', methods=['GET', 'POST'])
 def add_user():
