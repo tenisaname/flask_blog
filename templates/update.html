@@ -9,43 +9,45 @@
     </div>
 {% endfor%}
 
+<h1>Update List:</h1>
+<div class="shadow p-3 mb-5 bg-body rounded">
+    <form action="/update/{{ name_to_update.id }}"method="POST">
+        {{ form.hidden_tag() }}
 
-{% if name %}
-    <h1>Update user!</h1>
-    <br/>
-    <br/>
-    <table class="table table-dark table-sm">
-        {% for our_user in our_users %}
-            <tr>
-                <td>
-                    {{ our_user.id }}. {{
-                        our_user.name}} - {{ 
-                        our_user.email }}<br/>
-                </td>
-            </tr>
-        {% endfor %}
-    </table>
-{% else %}
-    <h1>Update List:</h1>
-    <div class="shadow p-3 mb-5 bg-body rounded">
-        <form action="/update/{{
-            name_to_update.id }}"method="POST">
-            {{ form.hidden_tag() }}
+        {{ form.name.label(class="form-label",) }}
+        {{ form.name(class="form-control", value=name_to_update.name) }}
 
-            {{ form.name.label(class="form-label",) }}
-            {{ form.name(class="form-control", value=name_to_update.name) }}
+        <br/>
 
-            <br/>
+        {{ form.email.label(class="form-label") }}
+        {{ form.email(class="form-control", value=name_to_update.email) }}
 
-            {{ form.email.label(class="form-label") }}
-            {{ form.email(class="form-control", value=name_to_update.email) }}
+        <br/>
+        {{ form.favorite_color.label(class="form-label") }}
+        {{ form.favorite_color(class="form-control", value=name_to_update.favorite_color) }}
+        <br/>
 
-            <br/>
-            {{ form.submit(class="btn btn-secondary") }}
+        {{ form.submit(class="btn btn-secondary") }}
 
-        </form>
-    </div>
+        <a href ="{{url_for('delete', id = id)}}" class="btn btn-danger">Delete</a>
+
+
+    </form>
+</div>
+<br/>
+<table class="table table-dark table-sm">
+    {% for our_user in our_users %}
+        <tr>
+            <td>
+                {{ our_user.id }}. <a href ="{{
+                url_for('update', id = our_user.id)}}">
+                {{ our_user.name}}</a> - {{ 
+                our_user.email }} - {{
+                our_user.favorite_color }}<br/>
+            </td>
+        </tr>
+    {% endfor %}
+</table>
 <br/><br/>
-{% endif %}
-
+    
 {% endblock %}
