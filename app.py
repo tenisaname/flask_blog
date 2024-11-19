@@ -1,7 +1,8 @@
 from flask import Flask, render_template, flash, request
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, EmailField
-from wtforms.validators import DataRequired
+from wtforms import StringField, SubmitField, EmailField, PasswordField, BooleanField, ValidationError
+from wtforms.validators import DataRequired, EqualTo, Length
+
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -69,6 +70,8 @@ class UserForm(FlaskForm):
     name = StringField("Name", validators=[DataRequired()])
     email = EmailField("Email", validators=[DataRequired()])
     favorite_color = StringField("Favorite Color")
+    password_hash = PasswordField("Password", validators=[DataRequired(), EqualTo('password_hash2', message='Passwords must match')])
+    password_hash2 = PasswordField("Confirm Password", validators=[DataRequired()])
     submit = SubmitField("Submit")
 
 # Create a Form Class
@@ -125,7 +128,9 @@ def add_user():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user is None:
-            user = User(name = form.name.data, email = form.email.data, favorite_color = form.favorite_color.data)
+            # Hash the password
+            hashed_pw = generate_password_hash(form.password_hash.data)
+            user = User(name = form.name.data, email = form.email.data, favorite_color = form.favorite_color.data, password_hash = hashed_pw )
             db.session.add(user)
             db.session.commit()
         name = form.name.data
@@ -137,7 +142,7 @@ def add_user():
     our_users = User.query.order_by(User.data_added)   
     return render_template("add_user.html", 
                            form = form,
-                           name=name,
+                           name = name,
                            our_users = our_users)
 
 # Create a route decorator
