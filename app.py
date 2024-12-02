@@ -2,13 +2,14 @@ from flask import Flask, render_template, flash, request
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, EmailField, PasswordField, BooleanField, ValidationError
 from wtforms.validators import DataRequired, EqualTo, Length
-
+from wtforms.widgets import TextArea
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date
+
 
 # Create a Flask Instance
 app = Flask(__name__)
@@ -21,6 +22,44 @@ app.config['SECRET_KEY'] = 'my secret key'
 db = SQLAlchemy(app)
 Migrate = Migrate(app, db)
 
+# Create a Blog Post model
+class Posts(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
+    body = db.Column(db.Text)
+    author = db.Column(db.String(255))
+    date_posted = db.Column(db.DateTime, default = datetime.utcnow)
+    slug = db.Column(db.String(255), unique=True)
+
+# Add Psot Page
+@app.route('/add_post', methods=['GET', 'POST'])
+def add_post():
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Posts(title=form.title.data, body=form.content.data, author=form.author.data, slug=form.slug.data)
+        # Clear The Form
+        form.title.data = ''
+        form.content.data = ''
+        form.author.data = ''
+        form.slug.data = ''
+
+        # Add post data to database
+        db.session.add(post)
+        db.session.commit()
+
+        # Return a Message
+        flash('Blog Post Submitted Successfully!')
+    return render_template('add_post.html', form=form)
+
+
+# Create a Posts  Form
+class PostForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    content = StringField('Content', validators=[DataRequired()], widget=TextArea())
+    author = StringField('Author', validators=[DataRequired()])
+    slug = StringField('Slug', validators=[DataRequired()])
+    submit= SubmitField('Submit')
+
 
 # Json Thing
 @app.route('/date')
@@ -31,7 +70,6 @@ def get_current_date():
         "Tim": "Mushroom"
     }
     return favorite_pizza
-    return {"Date": str(date.today())}
 
 
 # Create Models
