@@ -31,7 +31,16 @@ class Posts(db.Model):
     date_posted = db.Column(db.DateTime, default = datetime.utcnow)
     slug = db.Column(db.String(255), unique=True)
 
-# Add Psot Page
+@app.route('/posts')
+def posts():
+    # Grab all the posts from the database
+    posts = Posts.query.order_by(Posts.date_posted)
+    return render_template("posts.html", posts=posts)
+
+
+
+
+# Add Post Page
 @app.route('/add_post', methods=['GET', 'POST'])
 def add_post():
     form = PostForm()
