@@ -8,7 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from datetime import date
 
 # Create a Flask Instance
 app = Flask(__name__)
@@ -20,6 +20,19 @@ app.config['SECRET_KEY'] = 'my secret key'
 # Initialize The Database
 db = SQLAlchemy(app)
 Migrate = Migrate(app, db)
+
+
+# Json Thing
+@app.route('/date')
+def get_current_date():
+    favorite_pizza ={
+        "John": "Pepperoni",
+        "Mary": "Cheese",
+        "Tim": "Mushroom"
+    }
+    return favorite_pizza
+    return {"Date": str(date.today())}
+
 
 # Create Models
 class User(db.Model):
@@ -77,6 +90,12 @@ class UserForm(FlaskForm):
 # Create a Form Class
 class NameForm(FlaskForm):
     name = StringField("What's your name?", validators=[DataRequired()])
+    submit = SubmitField("Submit")
+
+# Create a check form
+class PasswordForm(FlaskForm):
+    email = StringField("What's your email?", validators=[DataRequired()])
+    password_hash = PasswordField("What's your password?", validators=[DataRequired()])
     submit = SubmitField("Submit")
 
 
@@ -176,6 +195,39 @@ def page_not_found(e):
 @app.errorhandler(500)
 def page_not_found(e):
     return render_template("500.html"),500
+
+# Create Password Test Page
+@app.route('/test_pw', methods=['GET', 'POST'])
+def test_pw():
+    email = None
+    password = None 
+    pw_to_check = None
+    passed = None 
+
+    form = PasswordForm()
+    # validate Form
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password_hash.data
+        # Clear the form
+        form.email.data = ""
+        form.password_hash.data = ""
+
+        pw_to_check = User.query.filter_by(email=email).first()
+
+        # Lookup User By Email Address
+        passed = check_password_hash(pw_to_check.password_hash, password)
+
+        # flash(f"Form Submitted Successfully")
+
+    return render_template("test_pw.html",
+                    email = email,
+                    password = password,
+                    pw_to_check = pw_to_check,
+                    passed = passed,
+                    form = form)
+
+
 
 # Create a Name Page
 @app.route('/name', methods=['GET', 'POST'])
